@@ -10,7 +10,7 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 
 // MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/arthankur', {
+mongoose.connect('mongodb://127.0.0.1:27017/Arthankur', {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })

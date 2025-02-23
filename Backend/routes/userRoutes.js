@@ -4,6 +4,11 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Test route
+router.get('/test', (req, res) => {
+    res.json({ message: 'API is working!' });
+});
+
 // Register route
 router.post('/register', async (req, res) => {
     try {
@@ -34,9 +39,14 @@ router.post('/register', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        res.status(201).json({ token });
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            token,
+            userType: user.userType
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Registration error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
@@ -64,9 +74,24 @@ router.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        res.json({ token });
+        res.json({ 
+            message: 'Login successful',
+            token,
+            userType: user.userType
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Get all users (for testing)
+router.get('/all', async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
