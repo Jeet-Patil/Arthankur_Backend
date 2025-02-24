@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
+require('dotenv').config();
 
 const app = express();
 
@@ -9,13 +10,8 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/Arthankur', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch((err) => console.error('MongoDB connection error:', err));
+// Connect to MongoDB Atlas
+connectDB();
 
 // Routes
 app.use('/api/users', userRoutes);
