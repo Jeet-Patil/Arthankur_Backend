@@ -1,7 +1,9 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
+const fundingRoutes = require('./routes/funding');
 require('dotenv').config();
 
 const app = express();
@@ -9,12 +11,21 @@ const app = express();
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // Connect to MongoDB Atlas
 connectDB();
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/funding', fundingRoutes);
+
+// Create uploads directory if it doesn't exist
+const fs = require('fs');
+const uploadDir = 'uploads/funding';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Error handling
 app.use((err, req, res, next) => {
