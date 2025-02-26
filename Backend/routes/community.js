@@ -199,23 +199,31 @@ router.post('/posts/:id/dislike', auth, async (req, res) => {
 });
 
 // Add comment to a post
-router.post('/posts/:id/comment', auth, async (req, res) => {
+router.post('/posts/:postId/comments', auth, async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id);
+        const { content } = req.body;
+        const post = await Post.findById(req.params.postId);
+        
         if (!post) {
-            return res.status(404).json({ message: 'Post not found' });
+            return res.status(404).json({ error: 'Post not found' });
         }
 
         post.comments.push({
-            user: req.user.id,
-            content: req.body.content
+            author: req.user.id,
+            content
         });
 
         await post.save();
-        res.status(201).json({ message: 'Comment added successfully' });
+
+        // Populate the new comment's author details
+        const populatedPost = await Post.findById(post._id)
+            .populate('author', 'name')
+            .populate('comments.author', 'name');
+
+        res.json(populatedPost);
     } catch (error) {
         console.error('Error adding comment:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: 'Error adding comment' });
     }
 });
 
