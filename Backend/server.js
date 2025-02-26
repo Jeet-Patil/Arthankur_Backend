@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const fundingRoutes = require('./routes/funding');
+const loanRoutes = require('./routes/loans');
 require('dotenv').config();
 
 const app = express();
@@ -19,12 +20,19 @@ connectDB();
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/funding', fundingRoutes);
+app.use('/api/loans', loanRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
 const uploadDir = 'uploads/funding';
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Create uploads directory for loans
+const loansUploadDir = 'uploads/loans';
+if (!fs.existsSync(loansUploadDir)) {
+    fs.mkdirSync(loansUploadDir, { recursive: true });
 }
 
 // Error handling
