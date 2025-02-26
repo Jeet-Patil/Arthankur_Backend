@@ -14,7 +14,7 @@ router.post('/register', async (req, res) => {
     try {
         console.log('Register attempt:', req.body); // Debug log
 
-        const { name, email, password, userType } = req.body;
+        const { name, email, password, userType, phoneNumber } = req.body;
         
         // Check if user exists
         let user = await User.findOne({ email });
@@ -28,7 +28,8 @@ router.post('/register', async (req, res) => {
             name,
             email,
             password,
-            userType
+            userType,
+            phoneNumber
         });
 
         // Hash password
@@ -52,7 +53,8 @@ router.post('/register', async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                phoneNumber: user.phoneNumber
             }
         });
     } catch (error) {
@@ -98,7 +100,8 @@ router.post('/login', async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                phoneNumber: user.phoneNumber
             }
         });
     } catch (error) {
