@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const fundingRoutes = require('./routes/funding');
 const loanRoutes = require('./routes/loans');
+const communityRoutes = require('./routes/community');
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +22,7 @@ connectDB();
 app.use('/api/users', userRoutes);
 app.use('/api/funding', fundingRoutes);
 app.use('/api/loans', loanRoutes);
+app.use('/api', communityRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
