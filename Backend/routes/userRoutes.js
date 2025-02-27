@@ -4,6 +4,25 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Middleware to protect routes
+const authMiddleware = (req, res, next) => {
+    try {
+        // Get token from header
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        
+        if (!token) {
+            return res.status(401).json({ error: 'No token, authorization denied' });
+        }
+        
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({ error: 'Token is not valid' });
+    }
+};
+
 // Test route
 router.get('/test', (req, res) => {
     res.json({ message: 'Backend is working!' });
@@ -40,7 +59,7 @@ router.post('/register', async (req, res) => {
 
         // Create token
         const token = jwt.sign(
-            { userId: user._id, userType: user.userType },
+            { userId: user._id, userType: user.userType, name: user.name },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -87,7 +106,7 @@ router.post('/login', async (req, res) => {
 
         // Create token
         const token = jwt.sign(
-            { userId: user._id, userType: user.userType },
+            { userId: user._id, userType: user.userType, name: user.name },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -130,4 +149,55 @@ router.get('/check-users', async (req, res) => {
     }
 });
 
-module.exports = router; 
+// Get user profile by ID
+router.get('/:userId', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json(user);
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ error: 'Server error fetching user profile' });
+    }
+});
+
+// Update user profile
+router.put('/:userId', authMiddleware, async (req, res) => {
+    try {
+        // Check if user is updating their own profile
+        if (req.user.userId !== req.params.userId) {
+            return res.status(403).json({ error: 'Not authorized to update this profile' });
+        }
+        
+        const { name, bio, location, website, linkedin, twitter, skills, interests } = req.body;
+        
+        // Build user object
+        const userFields = {};
+        if (name) userFields.name = name;
+        if (bio) userFields.bio = bio;
+        if (location) userFields.location = location;
+        if (website) userFields.website = website;
+        if (linkedin) userFields.linkedin = linkedin;
+        if (twitter) userFields.twitter = twitter;
+        if (skills) userFields.skills = skills;
+        if (interests) userFields.interests = interests;
+        
+        // Update user
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.userId,
+            { $set: userFields },
+            { new: true }
+        ).select('-password');
+        
+        res.json(updatedUser);
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ error: 'Server error updating user profile' });
+    }
+});
+
+module.exports = router;

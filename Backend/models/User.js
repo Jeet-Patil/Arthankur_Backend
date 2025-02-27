@@ -23,13 +23,54 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    // Profile fields
+    bio: {
+        type: String,
+        default: ''
+    },
+    location: {
+        type: String,
+        default: ''
+    },
+    website: {
+        type: String,
+        default: ''
+    },
+    linkedin: {
+        type: String,
+        default: ''
+    },
+    twitter: {
+        type: String,
+        default: ''
+    },
+    skills: {
+        type: [String],
+        default: []
+    },
+    interests: {
+        type: [String],
+        default: []
+    },
+    connections: {
+        type: Number,
+        default: 0
+    },
     // Startup specific fields
     registrationNumber: String,
     industry: String,
     about: String,
+    fundingRequests: {
+        type: Number,
+        default: 0
+    },
     
     // Investor specific fields
     investmentExperience: String,
+    investments: {
+        type: Number,
+        default: 0
+    },
     
     createdAt: {
         type: Date,
@@ -39,4 +80,4 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('User', userSchema); 
+module.exports = mongoose.model('User', userSchema);
