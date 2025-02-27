@@ -8,6 +8,7 @@ const loanRoutes = require('./routes/loans');
 const communityRoutes = require('./routes/community');
 const cashFlowRoutes = require('./routes/cashFlowRoutes');
 const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
+const meetingRoutes = require('./routes/meetings');
 require('dotenv').config();
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/loans', loanRoutes);
 app.use('/api', communityRoutes);
 app.use('/api/financial', cashFlowRoutes);
 app.use('/api/financial', workingCapitalRoutes);
+app.use('/api/meetings', meetingRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
@@ -47,7 +49,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 }); 
