@@ -6,6 +6,7 @@ const userRoutes = require('./routes/userRoutes');
 const fundingRoutes = require('./routes/funding');
 const loanRoutes = require('./routes/loans');
 const communityRoutes = require('./routes/community');
+const cashFlowRoutes = require('./routes/cashFlowRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/funding', fundingRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api', communityRoutes);
+app.use('/api/financial', cashFlowRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
