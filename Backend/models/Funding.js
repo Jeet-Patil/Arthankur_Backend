@@ -46,6 +46,22 @@ const fundingSchema = new mongoose.Schema({
         path: String,
         uploadDate: { type: Date, default: Date.now }
     }],
+    interests: [{
+        investorId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        name: String,
+        email: String,
+        message: String,
+        status: {
+            type: String,
+            enum: ['pending', 'accepted', 'rejected'],
+            default: 'pending'
+        },
+        date: { type: Date, default: Date.now }
+    }],
     status: {
         type: String,
         enum: ['pending', 'in_progress', 'approved', 'rejected'],
@@ -55,4 +71,4 @@ const fundingSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Funding', fundingSchema); 
+module.exports = mongoose.model('Funding', fundingSchema);

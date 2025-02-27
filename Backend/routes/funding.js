@@ -80,6 +80,7 @@ router.post('/', auth, upload.array('attachments'), async (req, res) => {
 router.get('/', auth, async (req, res) => {
     try {
         const fundings = await Funding.find({ userId: req.user.id })
+            .populate('interests.investorId')
             .sort({ createdAt: -1 });
         res.json(fundings);
     } catch (error) {
@@ -105,7 +106,8 @@ router.get('/stats', auth, async (req, res) => {
                     },
                     rejected: {
                         $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
-                    }
+                    },
+                    totalInterests: { $sum: { $size: { $ifNull: ["$interests", []] } } }
                 }
             }
         ]);
@@ -115,7 +117,8 @@ router.get('/stats', auth, async (req, res) => {
             totalFundingRequested: 0,
             inProgress: 0,
             approved: 0,
-            rejected: 0
+            rejected: 0,
+            totalInterests: 0
         });
     } catch (error) {
         res.status(500).json({ error: 'Error fetching funding statistics' });
@@ -133,4 +136,101 @@ router.get('/all', async (req, res) => {
     }
 });
 
-module.exports = router; 
+// Express interest in a funding request
+router.post('/:id/interest', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { message } = req.body;
+        
+        // Find the funding request
+        const funding = await Funding.findById(id);
+        if (!funding) {
+            return res.status(404).json({ error: 'Funding request not found' });
+        }
+        
+        // Check if the investor has already expressed interest
+        const alreadyInterested = funding.interests.some(
+            interest => interest.investorId.toString() === req.user.id.toString()
+        );
+        
+        if (alreadyInterested) {
+            return res.status(400).json({ error: 'You have already expressed interest in this funding request' });
+        }
+        
+        // Add the investor's interest with the message
+        funding.interests.push({
+            investorId: req.user.id,
+            name: req.user.name,
+            email: req.user.email,
+            message: message || 'Interested in your funding opportunity',
+            status: 'pending',
+            date: new Date()
+        });
+        
+        await funding.save();
+        
+        res.status(201).json({ message: 'Interest expressed successfully', funding });
+    } catch (error) {
+        console.error('Error expressing interest:', error);
+        res.status(500).json({ error: 'Error expressing interest in funding request' });
+    }
+});
+
+// Get a specific funding request by ID
+router.get('/:id', auth, async (req, res) => {
+    try {
+        const funding = await Funding.findById(req.params.id);
+        if (!funding) {
+            return res.status(404).json({ error: 'Funding request not found' });
+        }
+        
+        res.json(funding);
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching funding request' });
+    }
+});
+
+// Accept investor interest in a funding request
+router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
+    try {
+        const { id, interestId } = req.params;
+        
+        // Find the funding request
+        const funding = await Funding.findById(id);
+        if (!funding) {
+            return res.status(404).json({ error: 'Funding request not found' });
+        }
+        
+        // Verify this funding request belongs to the user
+        if (funding.userId.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ error: 'Unauthorized to accept interest for this funding request' });
+        }
+        
+        // Find the specific interest in the array
+        const interestIndex = funding.interests.findIndex(
+            interest => interest._id.toString() === interestId
+        );
+        
+        if (interestIndex === -1) {
+            return res.status(404).json({ error: 'Interest not found in this funding request' });
+        }
+        
+        // Update the interest status to accepted
+        funding.interests[interestIndex].status = 'accepted';
+        
+        // Update the funding status to approved
+        funding.status = 'approved';
+        
+        await funding.save();
+        
+        res.status(200).json({ 
+            message: 'Interest accepted successfully',
+            funding
+        });
+    } catch (error) {
+        console.error('Error accepting interest:', error);
+        res.status(500).json({ error: 'Error accepting interest in funding request' });
+    }
+});
+
+module.exports = router;
