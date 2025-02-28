@@ -10,6 +10,7 @@ const cashFlowRoutes = require('./routes/cashFlowRoutes');
 const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
 const meetingRoutes = require('./routes/meetings');
 const notificationsRoutes = require('./routes/notifications');
+const virtualPitchRoutes = require('./routes/virtualPitch');
 require('dotenv').config();
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api', communityRoutes);
 app.use('/api/financial', cashFlowRoutes);
 app.use('/api/financial', workingCapitalRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/virtual-pitch', virtualPitchRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
