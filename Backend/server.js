@@ -9,6 +9,7 @@ const communityRoutes = require('./routes/community');
 const cashFlowRoutes = require('./routes/cashFlowRoutes');
 const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
 const meetingRoutes = require('./routes/meetings');
+const notificationsRoutes = require('./routes/notifications');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +25,7 @@ connectDB();
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/funding', fundingRoutes);
+app.use('/api/notifications', notificationsRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api', communityRoutes);
 app.use('/api/financial', cashFlowRoutes);

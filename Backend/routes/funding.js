@@ -4,6 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const Funding = require('../models/Funding');
 const auth = require('../middleware/auth');
+const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -195,8 +197,8 @@ router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
     try {
         const { id, interestId } = req.params;
         
-        // Find the funding request
-        const funding = await Funding.findById(id);
+        // Find the funding request and populate investor details
+        const funding = await Funding.findById(id).populate('interests.investorId');
         if (!funding) {
             return res.status(404).json({ error: 'Funding request not found' });
         }
@@ -215,17 +217,53 @@ router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
             return res.status(404).json({ error: 'Interest not found in this funding request' });
         }
         
+        // Get startup details
+        const startup = await User.findById(funding.userId);
+        if (!startup) {
+            return res.status(404).json({ error: 'Startup details not found' });
+        }
+        
         // Update the interest status to accepted
         funding.interests[interestIndex].status = 'accepted';
         
-        // Update the funding status to approved
-        funding.status = 'approved';
+        // Generate a unique meeting room ID
+        const meetingId = `meeting-${funding._id}-${funding.interests[interestIndex].investorId}`;
+        
+        // Add meeting details
+        funding.interests[interestIndex].meetingRoomId = meetingId;
+        funding.interests[interestIndex].meetingDetails = {
+            startupName: startup.name,
+            investorName: funding.interests[interestIndex].name,
+            fundingTitle: funding.title,
+            fundingType: funding.type,
+            amount: funding.maxAmount,
+            createdAt: new Date()
+        };
+        
+        // Create notification for the investor
+        const notification = new Notification({
+            userId: funding.interests[interestIndex].investorId,
+            title: 'Interest Accepted!',
+            message: `${startup.name} has accepted your interest in "${funding.title}". A meeting room has been created for further discussion.`,
+            type: 'interest_accepted',
+            relatedTo: {
+                fundingId: funding._id,
+                meetingId: meetingId
+            }
+        });
+        
+        await notification.save();
+        
+        // Update the funding status to in_progress
+        funding.status = 'in_progress';
         
         await funding.save();
         
         res.status(200).json({ 
             message: 'Interest accepted successfully',
-            funding
+            funding,
+            meetingId,
+            notification
         });
     } catch (error) {
         console.error('Error accepting interest:', error);

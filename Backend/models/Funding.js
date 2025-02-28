@@ -60,7 +60,16 @@ const fundingSchema = new mongoose.Schema({
             enum: ['pending', 'accepted', 'rejected'],
             default: 'pending'
         },
-        date: { type: Date, default: Date.now }
+        date: { type: Date, default: Date.now },
+        meetingRoomId: String,
+        meetingDetails: {
+            startupName: String,
+            investorName: String,
+            fundingTitle: String,
+            fundingType: String,
+            amount: Number,
+            createdAt: { type: Date, default: Date.now }
+        }
     }],
     status: {
         type: String,
