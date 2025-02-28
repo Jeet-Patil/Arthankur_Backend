@@ -94,6 +94,40 @@ router.patch('/:meetingId/status', auth, async (req, res) => {
     }
 });
 
+// Update meeting (for changing meetingLink)
+router.patch('/:meetingId', auth, async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+        const { meetingLink } = req.body;
+
+        const meeting = await Meeting.findOne({
+            _id: meetingId,
+            $or: [
+                { requestedBy: req.user.id },
+                { requestedTo: req.user.id }
+            ]
+        });
+
+        if (!meeting) {
+            return res.status(404).json({ message: 'Meeting not found or unauthorized' });
+        }
+
+        // Update only allowed fields
+        if (meetingLink) meeting.meetingLink = meetingLink;
+
+        await meeting.save();
+
+        // Populate user details before sending response
+        await meeting.populate('requestedBy', 'name email');
+        await meeting.populate('requestedTo', 'name email');
+
+        res.json(meeting);
+    } catch (error) {
+        console.error('Error updating meeting:', error);
+        res.status(400).json({ message: 'Error updating meeting' });
+    }
+});
+
 // Get all users (for user selection in meeting creation)
 router.get('/users', auth, async (req, res) => {
     try {
