@@ -11,6 +11,7 @@ const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
 const meetingRoutes = require('./routes/meetings');
 const notificationsRoutes = require('./routes/notifications');
 const virtualPitchRoutes = require('./routes/virtualPitch');
+const taxComplianceRoutes = require('./routes/taxComplianceRoutes');
 const path = require('path');
 require('dotenv').config();
 
@@ -34,21 +35,16 @@ app.use('/api/financial', cashFlowRoutes);
 app.use('/api/financial', workingCapitalRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/virtual-pitch', virtualPitchRoutes);
+app.use('/api/tax', taxComplianceRoutes);
 
 // Create uploads directories if they don't exist
 const fs = require('fs');
-const uploadDirs = ['uploads/profiles', 'uploads/funding'];
+const uploadDirs = ['uploads/profiles', 'uploads/funding', 'uploads/gst', 'uploads/loans'];
 uploadDirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 });
-
-// Create uploads directory for loans
-const loansUploadDir = 'uploads/loans';
-if (!fs.existsSync(loansUploadDir)) {
-    fs.mkdirSync(loansUploadDir, { recursive: true });
-}
 
 // Error handling
 app.use((err, req, res, next) => {
