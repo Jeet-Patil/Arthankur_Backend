@@ -19,15 +19,31 @@ const userSchema = new mongoose.Schema({
         enum: ['startup', 'investor'],
         required: true
     },
+    profilePhoto: {
+        type: String,
+        default: null
+    },
+    phone: {
+        type: String,
+        default: null
+    },
+    company: {
+        type: String,
+        default: null
+    },
+    role: {
+        type: String,
+        default: null
+    },
+    bio: {
+        type: String,
+        default: null
+    },
     phoneNumber: {
         type: String,
         required: true
     },
     // Profile fields
-    bio: {
-        type: String,
-        default: ''
-    },
     location: {
         type: String,
         default: ''

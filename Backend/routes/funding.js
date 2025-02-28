@@ -271,4 +271,33 @@ router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
     }
 });
 
+// Delete a funding request
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        const funding = await Funding.findById(req.params.id);
+        
+        if (!funding) {
+            return res.status(404).json({ error: 'Funding request not found' });
+        }
+
+        // Verify this funding request belongs to the user
+        if (funding.userId.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ error: 'Unauthorized to delete this funding request' });
+        }
+
+        // Delete any associated notifications
+        await Notification.deleteMany({
+            'relatedTo.fundingId': funding._id
+        });
+
+        // Delete the funding request
+        await Funding.findByIdAndDelete(req.params.id);
+
+        res.json({ message: 'Funding request deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting funding request:', error);
+        res.status(500).json({ error: 'Error deleting funding request' });
+    }
+});
+
 module.exports = router;

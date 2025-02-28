@@ -11,6 +11,7 @@ const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
 const meetingRoutes = require('./routes/meetings');
 const notificationsRoutes = require('./routes/notifications');
 const virtualPitchRoutes = require('./routes/virtualPitch');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -18,7 +19,7 @@ const app = express();
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB Atlas
 connectDB();
@@ -34,12 +35,14 @@ app.use('/api/financial', workingCapitalRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/virtual-pitch', virtualPitchRoutes);
 
-// Create uploads directory if it doesn't exist
+// Create uploads directories if they don't exist
 const fs = require('fs');
-const uploadDir = 'uploads/funding';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDirs = ['uploads/profiles', 'uploads/funding'];
+uploadDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+});
 
 // Create uploads directory for loans
 const loansUploadDir = 'uploads/loans';
