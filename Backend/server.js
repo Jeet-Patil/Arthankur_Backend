@@ -13,6 +13,7 @@ const notificationsRoutes = require('./routes/notifications');
 const virtualPitchRoutes = require('./routes/virtualPitch');
 const taxComplianceRoutes = require('./routes/taxComplianceRoutes');
 const paymentRoutes = require('./routes/payments');
+const chatbotRoutes = require('./routes/chatbot');
 const path = require('path');
 require('dotenv').config();
 
@@ -38,6 +39,7 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/virtual-pitch', virtualPitchRoutes);
 app.use('/api/tax', taxComplianceRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Create uploads directories if they don't exist
 const fs = require('fs');
