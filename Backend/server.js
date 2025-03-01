@@ -12,6 +12,7 @@ const meetingRoutes = require('./routes/meetings');
 const notificationsRoutes = require('./routes/notifications');
 const virtualPitchRoutes = require('./routes/virtualPitch');
 const taxComplianceRoutes = require('./routes/taxComplianceRoutes');
+const paymentRoutes = require('./routes/payments');
 const path = require('path');
 require('dotenv').config();
 
@@ -36,6 +37,7 @@ app.use('/api/financial', workingCapitalRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/virtual-pitch', virtualPitchRoutes);
 app.use('/api/tax', taxComplianceRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Create uploads directories if they don't exist
 const fs = require('fs');
@@ -55,4 +57,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-}); 
+});
