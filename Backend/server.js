@@ -11,6 +11,9 @@ const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
 const meetingRoutes = require('./routes/meetings');
 const notificationsRoutes = require('./routes/notifications');
 const taxComplianceRoutes = require('./routes/taxCompliance');
+const chatbotRoutes = require('./routes/chatbot');
+const stripeRoutes = require('./routes/stripe');
+const paymentRoutes = require('./routes/payments');
 require('dotenv').config();
 
 const app = express();
@@ -33,6 +36,9 @@ app.use('/api/financial', cashFlowRoutes);
 app.use('/api/financial', workingCapitalRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/tax-compliance', taxComplianceRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
@@ -52,6 +58,14 @@ const taxUploadDir = 'uploads/tax';
 if (!fs.existsSync(taxUploadDir)) {
     fs.mkdirSync(taxUploadDir, { recursive: true });
 }
+
+// Create uploads directory for stripe documents
+const stripeUploadDir = 'uploads/stripe';
+if (!fs.existsSync(stripeUploadDir)) {
+    fs.mkdirSync(stripeUploadDir, { recursive: true });
+}
+
+
 
 // Error handling
 app.use((err, req, res, next) => {

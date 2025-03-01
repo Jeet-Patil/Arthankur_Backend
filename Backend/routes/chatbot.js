@@ -4,7 +4,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
 // Initialize Gemini with API Key
-const genAI = new GoogleGenerativeAI("AIzaSyD0yOAfvMzZ4D1DeCNM0AzlmWmfn1l7CiM");
+const API_KEY = process.env.GEMINI_API_KEY || "AIzaSyD0yOAfvMzZ4D1DeCNM0AzlmWmfn1l7CiM";
+const genAI = new GoogleGenerativeAI(API_KEY);
 const geminiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // System prompt for the chatbot
