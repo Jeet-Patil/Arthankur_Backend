@@ -1,20 +1,26 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const auth = async (req, res, next) => {
     try {
-        const token = req.header('Authorization').replace('Bearer ', '');
-        console.log('Token received:', token); // Debug log
+        const token = req.header('Authorization')?.replace('Bearer ', '');
+        
+        if (!token) {
+            throw new Error('No authentication token provided');
+        }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('Decoded token:', decoded); // Debug log
+        const user = await User.findOne({ _id: decoded.userId });
 
-        req.user = { id: decoded.userId, userType: decoded.userType };
-        console.log('User set in request:', req.user); // Debug log
+        if (!user) {
+            throw new Error('User not found');
+        }
 
+        req.token = token;
+        req.user = user;
         next();
     } catch (error) {
-        console.error('Auth middleware error:', error);
-        res.status(401).json({ error: 'Please authenticate' });
+        res.status(401).json({ message: 'Please authenticate' });
     }
 };
 

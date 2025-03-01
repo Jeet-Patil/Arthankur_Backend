@@ -10,11 +10,7 @@ const cashFlowRoutes = require('./routes/cashFlowRoutes');
 const workingCapitalRoutes = require('./routes/workingCapitalRoutes');
 const meetingRoutes = require('./routes/meetings');
 const notificationsRoutes = require('./routes/notifications');
-const virtualPitchRoutes = require('./routes/virtualPitch');
-const taxComplianceRoutes = require('./routes/taxComplianceRoutes');
-const paymentRoutes = require('./routes/payments');
-const chatbotRoutes = require('./routes/chatbot');
-const path = require('path');
+const taxComplianceRoutes = require('./routes/taxCompliance');
 require('dotenv').config();
 
 const app = express();
@@ -22,7 +18,7 @@ const app = express();
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static('uploads'));
 
 // Connect to MongoDB Atlas
 connectDB();
@@ -36,19 +32,26 @@ app.use('/api', communityRoutes);
 app.use('/api/financial', cashFlowRoutes);
 app.use('/api/financial', workingCapitalRoutes);
 app.use('/api/meetings', meetingRoutes);
-app.use('/api/virtual-pitch', virtualPitchRoutes);
-app.use('/api/tax', taxComplianceRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/tax-compliance', taxComplianceRoutes);
 
-// Create uploads directories if they don't exist
+// Create uploads directory if it doesn't exist
 const fs = require('fs');
-const uploadDirs = ['uploads/profiles', 'uploads/funding', 'uploads/gst', 'uploads/loans'];
-uploadDirs.forEach(dir => {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
-});
+const uploadDir = 'uploads/funding';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Create uploads directory for loans
+const loansUploadDir = 'uploads/loans';
+if (!fs.existsSync(loansUploadDir)) {
+    fs.mkdirSync(loansUploadDir, { recursive: true });
+}
+
+// Create uploads directory for tax documents
+const taxUploadDir = 'uploads/tax';
+if (!fs.existsSync(taxUploadDir)) {
+    fs.mkdirSync(taxUploadDir, { recursive: true });
+}
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -59,4 +62,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-});
+}); 
