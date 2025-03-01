@@ -6,6 +6,7 @@ const Funding = require('../models/Funding');
 const auth = require('../middleware/auth');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const Meeting = require('../models/Meeting');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -229,6 +230,20 @@ router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
         // Generate a unique meeting room ID
         const meetingId = `meeting-${funding._id}-${funding.interests[interestIndex].investorId}`;
         
+        // Create a meeting record
+        const meeting = new Meeting({
+            requestedBy: funding.userId, // startup
+            requestedTo: funding.interests[interestIndex].investorId, // investor
+            title: `Discussion: ${funding.title}`,
+            description: `Investment discussion for ${funding.title} between ${startup.name} and ${funding.interests[interestIndex].name}`,
+            dateTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now
+            duration: 60, // Default 60 minutes
+            status: 'pending',
+            meetingLink: meetingId
+        });
+        
+        await meeting.save();
+        
         // Add meeting details
         funding.interests[interestIndex].meetingRoomId = meetingId;
         funding.interests[interestIndex].meetingDetails = {
@@ -244,11 +259,11 @@ router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
         const notification = new Notification({
             userId: funding.interests[interestIndex].investorId,
             title: 'Interest Accepted!',
-            message: `${startup.name} has accepted your interest in "${funding.title}". A meeting room has been created for further discussion.`,
+            message: `${startup.name} has accepted your interest in "${funding.title}". A meeting has been scheduled for further discussion.`,
             type: 'interest_accepted',
             relatedTo: {
                 fundingId: funding._id,
-                meetingId: meetingId
+                meetingId: meeting._id
             }
         });
         
@@ -262,7 +277,7 @@ router.post('/:id/accept-interest/:interestId', auth, async (req, res) => {
         res.status(200).json({ 
             message: 'Interest accepted successfully',
             funding,
-            meetingId,
+            meetingId: meeting._id,
             notification
         });
     } catch (error) {
