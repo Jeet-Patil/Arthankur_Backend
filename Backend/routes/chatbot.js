@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const auth = require('../middleware/auth');
+const User = require('../models/User');
+const Funding = require('../models/Funding');
 require('dotenv').config();
 
 // Initialize Gemini with API Key
@@ -20,6 +23,31 @@ Here's some information about Arthankur:
 - Startups can manage their tax compliance through the platform
 - Users can upload and view documents related to funding requests
 - Keep responses concise and helpful
+`;
+
+// Enhanced prompt for personalized recommendations based on user data
+const getPersonalizedPrompt = (userData) => `
+You are providing personalized recommendations to a startup founder based on their profile data:
+
+Startup Profile Data:
+- Company: ${userData.company || 'Not specified'}
+- Industry: ${userData.industry || userData.industryType || 'Not specified'}
+- Stage: ${userData.startupStage || 'Not specified'}
+- Revenue: ${userData.annualRevenue || 'Not specified'}
+- Team Size: ${userData.numberOfEmployees || 'Not specified'} employees
+- Location: ${userData.registeredLocation || userData.location || 'Not specified'}
+- Government Support: ${userData.existingGovernmentSupport || 'Not specified'}
+
+Your task is to analyze this data and provide specific recommendations for:
+1. Funding strategies appropriate for their stage and industry
+2. Financial tools they should prioritize using
+3. Resources or features on Arthankur that would benefit them most
+4. Potential growth opportunities based on their industry
+5. Compliance requirements they should be aware of
+
+Keep your recommendations specific to their profile, actionable, and concise.
+Focus on their most immediate needs based on their stage and industry.
+Format your response clearly with bullet points and sections.
 `;
 
 // Status check endpoint
@@ -79,4 +107,58 @@ router.post('/message', async (req, res) => {
   }
 });
 
-module.exports = router; 
+// Personalized recommendations endpoint (requires authentication)
+router.post('/recommendations', auth, async (req, res) => {
+  try {
+    // Get the user data from auth middleware
+    const user = req.user;
+    
+    // Check if the user is a startup
+    if (user.userType !== 'startup') {
+      return res.status(400).json({ 
+        error: 'Personalized recommendations are only available for startup profiles' 
+      });
+    }
+
+    // Get additional data if needed
+    const { message } = req.body;
+    const userQuestion = message || "What recommendations do you have for my startup?";
+
+    // Initialize chat with personalized context
+    const chat = geminiModel.startChat({
+      history: [
+        { role: 'user', parts: [{ text: 'You are providing personalized recommendations for an Arthankur startup user.' }] },
+        { role: 'model', parts: [{ text: 'I understand. I will analyze their profile data and provide tailored recommendations for their startup.' }] },
+      ],
+      generationConfig: {
+        maxOutputTokens: 500,
+        temperature: 0.4, // Lower temperature for more focused recommendations
+      },
+    });
+
+    // Send message with personalized prompt based on user data
+    const personalPrompt = getPersonalizedPrompt(user) + "\n\nUser question: " + userQuestion;
+    const result = await chat.sendMessage(personalPrompt);
+    const response = result.response.text();
+    
+    res.json({ 
+      success: true,
+      response,
+      profileData: {
+        company: user.company,
+        industry: user.industry || user.industryType,
+        stage: user.startupStage,
+        employees: user.numberOfEmployees,
+        revenue: user.annualRevenue
+      }
+    });
+  } catch (error) {
+    console.error('Personalized recommendations error:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate personalized recommendations', 
+      details: error.message 
+    });
+  }
+});
+
+module.exports = router;
