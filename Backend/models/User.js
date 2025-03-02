@@ -81,6 +81,34 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
     
+    // Additional startup fields for government scheme eligibility
+    startupStage: {
+        type: String,
+        enum: ['Idea', 'Prototype', 'Early Stage', 'Growth', 'Mature'],
+        default: ''
+    },
+    industryType: {
+        type: String,
+        default: ''
+    },
+    annualRevenue: {
+        type: String,
+        default: ''
+    },
+    numberOfEmployees: {
+        type: Number,
+        default: 0
+    },
+    registeredLocation: {
+        type: String,
+        default: ''
+    },
+    existingGovernmentSupport: {
+        type: String,
+        enum: ['Yes', 'No'],
+        default: 'No'
+    },
+    
     // Investor specific fields
     investmentExperience: String,
     investments: {

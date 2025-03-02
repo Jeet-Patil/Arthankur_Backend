@@ -1,24 +1,27 @@
 {
-  "name": "backend",
+  "name": "arthankur-backend",
   "version": "1.0.0",
+  "description": "Backend for Arthankur",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "seed": "node seedData.js",
+    "test-connection": "node testConnection.js",
+    "test-eligibility": "node testEligibility.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "@google/generative-ai": "^0.22.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "jwt-decode": "^4.0.0",
-    "mongoose": "^7.0.0",
+    "mongoose": "^7.0.3",
     "multer": "^1.4.5-lts.1",
     "stripe": "^17.7.0"
   },

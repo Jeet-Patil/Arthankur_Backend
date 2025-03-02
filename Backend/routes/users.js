@@ -34,11 +34,36 @@ const upload = multer({
 // Register user
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, userType } = req.body;
+        console.log('Registration request received:', req.body);
+        
+        const { 
+            name, 
+            email, 
+            password, 
+            userType, 
+            phoneNumber, 
+            registrationNumber, 
+            industry, 
+            about,
+            startupStage,
+            industryType,
+            annualRevenue,
+            numberOfEmployees,
+            registeredLocation,
+            existingGovernmentSupport,
+            investmentExperience
+        } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !password || !userType || !phoneNumber) {
+            console.error('Missing required fields');
+            return res.status(400).json({ error: 'Please provide all required fields' });
+        }
 
         // Check if user already exists
         let user = await User.findOne({ email });
         if (user) {
+            console.log('User already exists:', email);
             return res.status(400).json({ error: 'User already exists' });
         }
 
@@ -47,14 +72,33 @@ router.post('/register', async (req, res) => {
             name,
             email,
             password,
-            userType
+            userType,
+            phoneNumber
         });
+
+        // Add user type specific fields
+        if (userType === 'startup') {
+            user.registrationNumber = registrationNumber;
+            user.industry = industry;
+            user.about = about;
+            // Additional fields for government scheme eligibility
+            user.startupStage = startupStage;
+            user.industryType = industryType;
+            user.annualRevenue = annualRevenue;
+            user.numberOfEmployees = numberOfEmployees;
+            user.registeredLocation = registeredLocation;
+            user.existingGovernmentSupport = existingGovernmentSupport;
+        } else if (userType === 'investor') {
+            user.investmentExperience = investmentExperience;
+        }
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
 
+        console.log('Saving user to database...');
         await user.save();
+        console.log('User saved successfully:', user._id);
 
         // Create and return JWT token
         const payload = {
@@ -69,7 +113,10 @@ router.post('/register', async (req, res) => {
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '24h' },
             (err, token) => {
-                if (err) throw err;
+                if (err) {
+                    console.error('JWT sign error:', err);
+                    throw err;
+                }
                 res.json({ 
                     token,
                     userType: user.userType,
@@ -82,8 +129,15 @@ router.post('/register', async (req, res) => {
             }
         );
     } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Server error during registration' });
+        console.error('Registration error details:', error);
+        
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(val => val.message);
+            return res.status(400).json({ error: messages.join(', ') });
+        }
+        
+        res.status(500).json({ error: 'Server error during registration', details: error.message });
     }
 });
 
@@ -135,7 +189,23 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Get user profile
+// Get current user's profile
+router.get('/me', auth, async (req, res) => {
+    try {
+        console.log('Getting current user profile for ID:', req.user._id);
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        console.log('Returning user profile');
+        res.json(user);
+    } catch (error) {
+        console.error('Error fetching current user profile:', error);
+        res.status(500).json({ error: 'Server error fetching profile' });
+    }
+});
+
+// Get user profile by ID
 router.get('/:id', auth, async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password');

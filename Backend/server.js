@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const connectDB = require('./config/db');
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/users');
 const fundingRoutes = require('./routes/funding');
 const loanRoutes = require('./routes/loans');
 const communityRoutes = require('./routes/community');
@@ -14,6 +14,7 @@ const taxComplianceRoutes = require('./routes/taxCompliance');
 const chatbotRoutes = require('./routes/chatbot');
 const stripeRoutes = require('./routes/stripe');
 const paymentRoutes = require('./routes/payments');
+const governmentSchemesRoutes = require('./routes/governmentSchemes');
 require('dotenv').config();
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/tax-compliance', taxComplianceRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/government-schemes', governmentSchemesRoutes);
 
 // Create uploads directory if it doesn't exist
 const fs = require('fs');
