@@ -36,9 +36,12 @@ const meetingSchema = new mongoose.Schema({
     },
     meetingLink: {
         type: String
+    },
+    virtualPitchRoomId: {
+        type: String
     }
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('Meeting', meetingSchema); 
+module.exports = mongoose.model('Meeting', meetingSchema);

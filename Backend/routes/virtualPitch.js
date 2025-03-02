@@ -234,4 +234,61 @@ router.delete('/:pitchId', auth, async (req, res) => {
     }
 });
 
+// Get or create a virtual pitch by roomId (for meeting integration)
+router.get('/room/:roomId', auth, async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        
+        // Try to find an existing virtual pitch with this roomId
+        let virtualPitch = await VirtualPitch.findOne({ roomId })
+            .populate('createdBy', 'name email userType')
+            .populate('attendees.userId', 'name email userType');
+        
+        // If virtual pitch doesn't exist, create a new one
+        if (!virtualPitch) {
+            // Default values for a new virtual pitch
+            const newVirtualPitch = new VirtualPitch({
+                title: 'Meeting Pitch',
+                description: 'Virtual pitch session from scheduled meeting',
+                industry: 'General',
+                roomId,
+                createdBy: req.user.id,
+                creatorType: req.user.userType,
+                scheduledDate: new Date()
+            });
+            
+            await newVirtualPitch.save();
+            
+            // Fetch the newly created pitch with populated fields
+            virtualPitch = await VirtualPitch.findById(newVirtualPitch._id)
+                .populate('createdBy', 'name email userType');
+        }
+        
+        // Add the current user as an attendee if not already present
+        const alreadyJoined = virtualPitch.attendees.some(
+            attendee => attendee.userId && attendee.userId.toString() === req.user.id
+        );
+        
+        if (!alreadyJoined) {
+            virtualPitch.attendees.push({
+                userId: req.user.id,
+                userType: req.user.userType,
+                joinedAt: new Date()
+            });
+            
+            await virtualPitch.save();
+            
+            // Refresh the virtual pitch data
+            virtualPitch = await VirtualPitch.findById(virtualPitch._id)
+                .populate('createdBy', 'name email userType')
+                .populate('attendees.userId', 'name email userType');
+        }
+        
+        res.json(virtualPitch);
+    } catch (error) {
+        console.error('Error handling virtual pitch by roomId:', error);
+        res.status(500).json({ message: 'Error handling virtual pitch', error: error.message });
+    }
+});
+
 module.exports = router;

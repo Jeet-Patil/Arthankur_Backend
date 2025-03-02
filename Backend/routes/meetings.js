@@ -37,6 +37,9 @@ router.post('/', auth, async (req, res) => {
 
         // Create a unique meeting link (you can use a more sophisticated method)
         const meetingLink = `https://meet.google.com/${Math.random().toString(36).substring(7)}`;
+        
+        // Create a unique virtual pitch room ID
+        const virtualPitchRoomId = `pitch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
         const meeting = new Meeting({
             requestedBy: req.user.id,
@@ -45,7 +48,8 @@ router.post('/', auth, async (req, res) => {
             description,
             dateTime,
             duration,
-            meetingLink
+            meetingLink,
+            virtualPitchRoomId
         });
 
         await meeting.save();
@@ -81,6 +85,14 @@ router.patch('/:meetingId/status', auth, async (req, res) => {
         }
 
         meeting.status = status;
+        
+        // If the meeting is being accepted and doesn't have a virtualPitchRoomId, create one
+        if (status === 'accepted' && !meeting.virtualPitchRoomId) {
+            const virtualPitchRoomId = `pitch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+            meeting.virtualPitchRoomId = virtualPitchRoomId;
+            console.log(`Created virtualPitchRoomId for meeting ${meetingId}: ${virtualPitchRoomId}`);
+        }
+        
         await meeting.save();
 
         // Populate user details before sending response
@@ -142,4 +154,72 @@ router.get('/users', auth, async (req, res) => {
     }
 });
 
-module.exports = router; 
+// Get virtual pitch information for a meeting
+router.get('/:meetingId/virtual-pitch', auth, async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+
+        const meeting = await Meeting.findOne({
+            _id: meetingId,
+            $or: [
+                { requestedBy: req.user.id },
+                { requestedTo: req.user.id }
+            ]
+        });
+
+        if (!meeting) {
+            return res.status(404).json({ message: 'Meeting not found or unauthorized' });
+        }
+
+        // Return virtual pitch information
+        res.json({
+            meetingId: meeting._id,
+            title: meeting.title,
+            virtualPitchRoomId: meeting.virtualPitchRoomId,
+            virtualPitchUrl: `/virtual-pitch/${meeting.virtualPitchRoomId}`
+        });
+    } catch (error) {
+        console.error('Error fetching virtual pitch information:', error);
+        res.status(500).json({ message: 'Error fetching virtual pitch information' });
+    }
+});
+
+// Refresh virtual pitch room ID for a meeting
+router.patch('/:meetingId/refresh-virtual-pitch', auth, async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+
+        const meeting = await Meeting.findOne({
+            _id: meetingId,
+            status: 'accepted',
+            $or: [
+                { requestedBy: req.user.id },
+                { requestedTo: req.user.id }
+            ]
+        });
+
+        if (!meeting) {
+            return res.status(404).json({ message: 'Meeting not found, not accepted, or unauthorized' });
+        }
+
+        // Generate a new virtual pitch room ID
+        const virtualPitchRoomId = `pitch-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        meeting.virtualPitchRoomId = virtualPitchRoomId;
+        await meeting.save();
+
+        console.log(`Refreshed virtualPitchRoomId for meeting ${meetingId}: ${virtualPitchRoomId}`);
+
+        // Return the updated meeting with the new virtual pitch information
+        res.json({
+            meetingId: meeting._id,
+            title: meeting.title,
+            virtualPitchRoomId: meeting.virtualPitchRoomId,
+            virtualPitchUrl: `/virtual-pitch/${meeting.virtualPitchRoomId}`
+        });
+    } catch (error) {
+        console.error('Error refreshing virtual pitch room ID:', error);
+        res.status(500).json({ message: 'Error refreshing virtual pitch room ID' });
+    }
+});
+
+module.exports = router;
