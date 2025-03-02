@@ -85,7 +85,7 @@ const userSchema = new mongoose.Schema({
     startupStage: {
         type: String,
         enum: ['Idea', 'Prototype', 'Early Stage', 'Growth', 'Mature'],
-        default: ''
+        default: 'Idea'
     },
     industryType: {
         type: String,
